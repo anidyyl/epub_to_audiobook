@@ -15,10 +15,12 @@ from audiobook_generator.tts_providers.xai_tts_provider import get_xai_supported
 from audiobook_generator.tts_providers.piper_tts_provider import get_piper_supported_languages, \
     get_piper_supported_voices, get_piper_supported_qualities, get_piper_supported_speakers
 from audiobook_generator.utils.log_handler import generate_unique_log_path
+from audiobook_generator.core.apple_books_exporter import list_audiobook_folders, export_to_m4b
 from main import main
 
 selected_tts = "Edge"
 running_process: Optional[Process] = None
+running_export_process: Optional[Process] = None
 webui_log_file = None
 
 def on_tab_change(evt: gr.SelectData):
@@ -127,6 +129,38 @@ def launch_audiobook_generator(config):
     running_process = Process(target=main, args=(config, str(webui_log_file.absolute())))
     running_process.start()
 
+
+def _export_subprocess(folder_name, log_level, log_file):
+    from audiobook_generator.utils.log_handler import setup_logging
+    from audiobook_generator.core.apple_books_exporter import export_to_m4b
+    import logging
+    setup_logging(log_level, log_file)
+    logger = logging.getLogger(__name__)
+    try:
+        result = export_to_m4b(folder_name)
+        logger.info(result)
+    except Exception as e:
+        logger.error(f"Export failed: {e}")
+
+def do_start_export(folder_name: str) -> str:
+    global running_export_process
+    if not folder_name:
+        return "No folder selected."
+    if running_export_process and running_export_process.is_alive():
+        return "Export already in progress."
+    running_export_process = Process(
+        target=_export_subprocess,
+        args=(folder_name, "INFO", str(webui_log_file.absolute())),
+    )
+    running_export_process.start()
+    return f"Export started for '{folder_name}'. Check the log below for progress."
+
+def terminate_export_process():
+    global running_export_process
+    if running_export_process and running_export_process.is_alive():
+        running_export_process.terminate()
+        running_export_process = None
+        print("Export process terminated manually")
 
 def terminate_audiobook_generator():
     global running_process
@@ -324,6 +358,26 @@ def host_ui(config):
                     xai_voice, xai_language, xai_output_format
                 ],
                 outputs=None)
+        gr.Markdown("---")
+        with gr.Accordion("Export for Apple Books (.m4b)", open=False):
+            gr.Markdown(
+                "Select a folder from `audiobook_output/` to merge all chapters into a single "
+                "`.m4b` file with chapter markers, compatible with Apple Books. Requires ffmpeg."
+            )
+            export_folder_dropdown = gr.Dropdown(
+                choices=list_audiobook_folders(),
+                label="Audiobook Folder",
+                interactive=True,
+                info="Select a folder from audiobook_output/",
+            )
+            with gr.Row(equal_height=True):
+                stop_export_btn = gr.Button("Stop Export")
+                export_btn = gr.Button("Export for Apple Books", variant="primary")
+            export_status = gr.Textbox(label="Export Status", interactive=False, lines=1)
+
+            stop_export_btn.click(fn=terminate_export_process, inputs=None, outputs=None)
+            export_btn.click(fn=do_start_export, inputs=export_folder_dropdown, outputs=export_status)
+
         with gr.Row():
             global webui_log_file
             webui_log_file = generate_unique_log_path("EtA_WebUI")
