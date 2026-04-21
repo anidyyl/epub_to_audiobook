@@ -19,6 +19,7 @@ services:
       # for custom OpenAI-compatible endpoints
       # OPENAI_BASE_URL: <your_openai_base_url>
       OPENAI_API_KEY: <your_openai_api_key>
+      XAI_API_KEY: <your_xai_api_key>
     ports:
       - "7860:7860"
     volumes:

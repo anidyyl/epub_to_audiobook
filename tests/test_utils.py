@@ -24,6 +24,28 @@ def get_azure_config():
     return GeneralConfig(args)
 
 
+def get_xai_config():
+    args = MagicMock(
+        input_file='examples/The_Life_and_Adventures_of_Robinson_Crusoe.epub',
+        output_folder='output',
+        preview=False,
+        output_text=False,
+        log='INFO',
+        newline_mode='double',
+        chapter_start=1,
+        chapter_end=-1,
+        remove_endnotes=False,
+        tts='xai',
+        language='en',
+        voice_name='eve',
+        output_format='mp3',
+        model_name=None,
+        xai_sample_rate=None,
+        xai_bit_rate=None,
+    )
+    return GeneralConfig(args)
+
+
 def get_openai_config():
     args = MagicMock(
         input_file='examples/The_Life_and_Adventures_of_Robinson_Crusoe.epub',

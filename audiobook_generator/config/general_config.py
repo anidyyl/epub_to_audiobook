@@ -40,6 +40,10 @@ class GeneralConfig:
         self.voice_pitch = getattr(args, 'voice_pitch', None)
         self.proxy = getattr(args, 'proxy', None)
 
+        # TTS provider: xAI specific arguments
+        self.xai_sample_rate = getattr(args, 'xai_sample_rate', None)
+        self.xai_bit_rate = getattr(args, 'xai_bit_rate', None)
+
         # TTS provider: Piper specific arguments
         self.piper_path = getattr(args, 'piper_path', None)
         self.piper_docker_image = getattr(args, 'piper_docker_image', None)

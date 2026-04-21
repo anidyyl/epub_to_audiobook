@@ -11,6 +11,8 @@ from audiobook_generator.tts_providers.edge_tts_provider import get_edge_tts_sup
     get_edge_tts_supported_language, get_edge_tts_supported_output_formats
 from audiobook_generator.tts_providers.openai_tts_provider import get_openai_supported_models, \
     get_openai_supported_voices, get_openai_instructions_example, get_openai_supported_output_formats
+from audiobook_generator.tts_providers.xai_tts_provider import get_xai_supported_voices, \
+    get_xai_supported_output_formats, get_xai_supported_languages
 from audiobook_generator.tts_providers.piper_tts_provider import get_piper_supported_languages, \
     get_piper_supported_voices, get_piper_supported_qualities, get_piper_supported_speakers
 from audiobook_generator.utils.log_handler import generate_unique_log_path
@@ -52,7 +54,8 @@ def process_ui_form(input_file, output_dir, worker_count, log_level, output_text
                     azure_language, azure_voice, azure_output_format, azure_break_duration,
                     edge_language, edge_voice, edge_output_format, proxy, edge_voice_rate, edge_volume, edge_pitch, edge_break_duration,
                     piper_executable_path, piper_docker_image, piper_language, piper_voice, piper_quality, piper_speaker,
-                    piper_noise_scale, piper_noise_w_scale, piper_length_scale, piper_sentence_silence):
+                    piper_noise_scale, piper_noise_w_scale, piper_length_scale, piper_sentence_silence,
+                    xai_voice, xai_language, xai_output_format):
 
     config = GeneralConfig(None)
     config.input_file = input_file.name if hasattr(input_file, 'name') else input_file
@@ -105,6 +108,11 @@ def process_ui_form(input_file, output_dir, worker_count, log_level, output_text
         config.piper_noise_w_scale = piper_noise_w_scale
         config.piper_length_scale = piper_length_scale
         config.piper_sentence_silence = piper_sentence_silence
+    elif selected_tts == "xAI":
+        config.tts = "xai"
+        config.voice_name = xai_voice
+        config.language = xai_language
+        config.output_format = xai_output_format
     else:
         raise ValueError("Unsupported TTS provider selected")
 
@@ -227,6 +235,17 @@ def host_ui(config):
                     )
                 edge_tab.select(on_tab_change, inputs=None, outputs=None)
 
+            with gr.Tab("xAI", id="xai_tab_id") as xai_tab:
+                gr.Markdown("It is expected that the user has configured: `XAI_API_KEY` in the environment variables.")
+                with gr.Row(equal_height=True):
+                    xai_voice = gr.Dropdown(get_xai_supported_voices(), value="eve", label="Voice",
+                                            interactive=True, info="Select the voice")
+                    xai_language = gr.Dropdown(get_xai_supported_languages(), value="en", label="Language",
+                                               interactive=True, info="BCP-47 language code or 'auto' for detection")
+                    xai_output_format = gr.Dropdown(get_xai_supported_output_formats(), value="mp3",
+                                                    label="Output Format", interactive=True)
+                xai_tab.select(on_tab_change, inputs=None, outputs=None)
+
             with gr.Tab("Piper", id="piper_tab_id") as piper_tab:
                 piper_tab.select(on_tab_change, inputs=None, outputs=None)
                 with gr.Row(equal_height=True):
@@ -302,7 +321,8 @@ def host_ui(config):
                     azure_language, azure_voice, azure_output_format, azure_break_duration,
                     edge_language, edge_voice, edge_output_format, proxy, edge_voice_rate, edge_volume, edge_pitch, edge_break_duration,
                     piper_executable_path, piper_docker_image, piper_language, piper_voice, piper_quality, piper_speaker,
-                    piper_noise_scale, piper_noise_w_scale, piper_length_scale, piper_sentence_silence
+                    piper_noise_scale, piper_noise_w_scale, piper_length_scale, piper_sentence_silence,
+                    xai_voice, xai_language, xai_output_format
                 ],
                 outputs=None)
         with gr.Row():

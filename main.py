@@ -139,6 +139,22 @@ def handle_args():
         help="Instructions for the TTS model. Only supported for 'gpt-4o-mini-tts' model.",
     )
 
+    xai_tts_group = parser.add_argument_group(title="xai specific")
+    xai_tts_group.add_argument(
+        "--xai_sample_rate",
+        default=None,
+        type=int,
+        choices=[8000, 16000, 22050, 24000, 44100, 48000],
+        help="Sample rate in Hz for xAI TTS output (default: 24000).",
+    )
+    xai_tts_group.add_argument(
+        "--xai_bit_rate",
+        default=None,
+        type=int,
+        choices=[32000, 64000, 96000, 128000, 192000],
+        help="Bit rate in bps for xAI TTS MP3 output (default: 128000).",
+    )
+
     edge_tts_group = parser.add_argument_group(title="edge specific")
     edge_tts_group.add_argument(
         "--voice_rate",
