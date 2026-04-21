@@ -1,7 +1,6 @@
 from multiprocessing import Process
 from typing import Optional
 import os
-from datetime import datetime
 
 import gradio as gr
 from audiobook_generator.config.general_config import GeneralConfig
@@ -59,7 +58,7 @@ def process_ui_form(input_file, output_dir, worker_count, log_level, output_text
 
     config = GeneralConfig(None)
     config.input_file = input_file.name if hasattr(input_file, 'name') else input_file
-    config.output_folder = output_dir
+    config.output_folder = os.path.join("audiobook_output", output_dir.strip()) if output_dir and output_dir.strip() else None
     config.preview = preview
     config.output_text = output_text
     config.log = log_level
@@ -137,16 +136,16 @@ def terminate_audiobook_generator():
         print("Audiobook generator terminated manually")
 
 def host_ui(config):
-    default_output_dir = os.path.join("audiobook_output", datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-    print(f"Default audiobook output directory: {default_output_dir}")
     with gr.Blocks(analytics_enabled=False, title="Epub to Audiobook Converter") as ui:
         with gr.Row(equal_height=True):
             with gr.Column():
-                input_file = gr.File(label="Select the book file to process", file_types=[".epub"], 
+                input_file = gr.File(label="Select the book file to process", file_types=[".epub"],
                                     file_count="single", interactive=True)
 
             with gr.Column():
-                output_dir = gr.Textbox(label="Set Output Directory", value=default_output_dir, interactive=True, info="Default one should be fine.")
+                with gr.Group():
+                    gr.Markdown("`audiobook_output/`")
+                    output_dir = gr.Textbox(label="Book Folder Name", value="", placeholder="<title>_-_<author>", interactive=True, info="Leave blank to auto-derive from book title and author.")
                 log_level = gr.Dropdown(["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"], label="Log Level", value="INFO", interactive=True)
 
             with gr.Column():

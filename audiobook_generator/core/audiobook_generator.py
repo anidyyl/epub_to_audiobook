@@ -7,7 +7,7 @@ from audiobook_generator.config.general_config import GeneralConfig
 from audiobook_generator.core.audio_tags import AudioTags
 from audiobook_generator.tts_providers.base_tts_provider import get_tts_provider
 from audiobook_generator.utils.log_handler import setup_logging
-from audiobook_generator.utils.filename_sanitizer import make_safe_filename
+from audiobook_generator.utils.filename_sanitizer import make_safe_filename, _sanitize_base_name
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +90,12 @@ class AudiobookGenerator:
             logger.info("Starting audiobook generation...")
             book_parser = get_book_parser(self.config)
             tts_provider = get_tts_provider(self.config)
+
+            if not self.config.output_folder:
+                title = _sanitize_base_name(book_parser.get_book_title() or "untitled")
+                author = _sanitize_base_name(book_parser.get_book_author() or "unknown")
+                self.config.output_folder = os.path.join("audiobook_output", f"{title}_-_{author}")
+                logger.info(f"Output folder defaulting to: {self.config.output_folder}")
 
             os.makedirs(self.config.output_folder, exist_ok=True)
             chapters = book_parser.get_chapters(tts_provider.get_break_string())

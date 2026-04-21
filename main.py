@@ -12,7 +12,12 @@ from audiobook_generator.utils.log_handler import setup_logging, generate_unique
 def handle_args():
     parser = argparse.ArgumentParser(description="Convert text book to audiobook")
     parser.add_argument("input_file", help="Path to the EPUB file")
-    parser.add_argument("output_folder", help="Path to the output folder")
+    parser.add_argument(
+        "output_folder",
+        nargs="?",
+        default=None,
+        help="Path to the output folder (default: '<title> - <author>' derived from the book metadata)",
+    )
     parser.add_argument(
         "--tts",
         choices=get_supported_tts_providers(),
