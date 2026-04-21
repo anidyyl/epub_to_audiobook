@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 import gradio as gr
-from gradio_log import Log
 from audiobook_generator.config.general_config import GeneralConfig
 from audiobook_generator.tts_providers.azure_tts_provider import get_azure_supported_languages, \
     get_azure_supported_voices, get_azure_supported_output_formats
@@ -310,6 +309,13 @@ def host_ui(config):
             global webui_log_file
             webui_log_file = generate_unique_log_path("EtA_WebUI")
             webui_log_file.touch()
-            Log(str(webui_log_file.absolute()), dark=True, xterm_font_size=12)
+            log_path = str(webui_log_file.absolute())
+            gr.Code(
+                value=lambda path=log_path: open(path).read(),
+                every=2,
+                label="Log",
+                language=None,
+                interactive=False,
+            )
 
     ui.launch(server_name=config.host, server_port=config.port)
