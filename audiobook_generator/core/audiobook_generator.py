@@ -98,6 +98,16 @@ class AudiobookGenerator:
                 logger.info(f"Output folder defaulting to: {self.config.output_folder}")
 
             os.makedirs(self.config.output_folder, exist_ok=True)
+
+            # Save cover image if available
+            cover_info = book_parser.get_cover_image_data()
+            if cover_info:
+                cover_data, ext = cover_info
+                cover_path = os.path.join(self.config.output_folder, f"cover{ext}")
+                with open(cover_path, "wb") as f:
+                    f.write(cover_data)
+                logger.info(f"Saved cover image to {cover_path}")
+
             chapters = book_parser.get_chapters(tts_provider.get_break_string())
             # Filter out empty or very short chapters
             chapters = [(title, text) for title, text in chapters if text.strip()]

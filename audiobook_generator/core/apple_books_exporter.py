@@ -151,6 +151,14 @@ def export_to_m4b(folder_name: str) -> str:
 
     output_path = Path(AUDIOBOOK_OUTPUT_DIR) / f"{folder_name}.m4b"
 
+    # Check for cover image
+    cover_path = None
+    for ext in ['.jpg', '.jpeg', '.png', '.gif', '.bmp']:
+        potential_cover = Path(folder_path) / f"cover{ext}"
+        if potential_cover.exists():
+            cover_path = potential_cover
+            break
+
     with tempfile.TemporaryDirectory() as tmp_dir:
         metadata_path = Path(tmp_dir) / "metadata.txt"
         concat_path = Path(tmp_dir) / "concat.txt"
@@ -160,15 +168,39 @@ def export_to_m4b(folder_name: str) -> str:
         cmd = [
             "ffmpeg", "-y",
             "-f", "concat", "-safe", "0", "-i", str(concat_path),
-            "-i", str(metadata_path),
-            "-map_metadata", "1",
-            "-map_chapters", "1",
+        ]
+
+        metadata_input_index = 1
+        if cover_path:
+            cmd.extend(["-i", str(cover_path)])
+            metadata_input_index = 2
+
+        cmd.extend(["-i", str(metadata_path)])
+
+        if cover_path:
+            cmd.extend([
+                "-map", "0:a",
+                "-map", "1:v",
+                "-disposition:v", "attached_pic",
+                "-c:v", "copy",
+            ])
+        else:
+            cmd.extend(["-map", "0:a"])
+
+        cmd.extend([
+            "-map_metadata", str(metadata_input_index),
+            "-map_chapters", str(metadata_input_index),
             "-codec:a", "aac",
             "-b:a", "64k",
-            "-vn",
+        ])
+
+        if not cover_path:
+            cmd.append("-vn")
+
+        cmd.extend([
             "-movflags", "+faststart",
             str(output_path),
-        ]
+        ])
 
         logger.info("Running ffmpeg to encode M4B...")
         try:

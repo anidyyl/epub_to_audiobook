@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 from typing import List, Tuple
 
@@ -38,6 +39,22 @@ class EpubBookParser(BaseBookParser):
         if self.book.get_metadata('DC', 'creator'):
             return self.book.get_metadata("DC", "creator")[0][0]
         return "Unknown"
+
+    def get_cover_image_data(self) -> tuple[bytes, str] | None:
+        """Extract cover image data and extension from the EPUB."""
+        # Look for cover image in manifest
+        for item in self.book.get_items():
+            if item.get_type() == ebooklib.ITEM_IMAGE:
+                # Check if it's likely the cover
+                if 'cover' in item.get_name().lower() or 'cover' in str(item.get_id()).lower():
+                    ext = os.path.splitext(item.file_name)[1] or '.jpg'
+                    return item.get_content(), ext
+        # Fallback: first image
+        for item in self.book.get_items():
+            if item.get_type() == ebooklib.ITEM_IMAGE:
+                ext = os.path.splitext(item.file_name)[1] or '.jpg'
+                return item.get_content(), ext
+        return None
 
     def get_chapters(self, break_string) -> List[Tuple[str, str]]:
         chapters = []
