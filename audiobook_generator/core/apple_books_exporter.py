@@ -61,7 +61,7 @@ def _read_chapter_title_from_file(file_path: Path) -> str:
         tags = ID3(str(file_path))
         title = str(tags.get("TIT2", [""])[0])
         if title:
-            return title
+            return title.replace("_", " ")
     except Exception:
         pass
     name = re.sub(r"^\d+_", "", file_path.stem)
